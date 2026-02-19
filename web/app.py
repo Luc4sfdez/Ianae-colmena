@@ -131,6 +131,28 @@ def api_recuerdos(hid):
     return jsonify({"id": hid, "recuerdos": recientes})
 
 
+# Historial de conversacion humano <-> colmena
+HISTORIAL_DIR = os.path.join(BASE, "chat")
+os.makedirs(HISTORIAL_DIR, exist_ok=True)
+HISTORIAL_FILE = os.path.join(HISTORIAL_DIR, "historial.json")
+
+
+def cargar_historial():
+    try:
+        with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return []
+
+
+def guardar_historial(historial):
+    try:
+        with open(HISTORIAL_FILE, "w", encoding="utf-8") as f:
+            json.dump(historial, f, ensure_ascii=False, indent=1)
+    except OSError:
+        pass
+
+
 @app.route("/api/mensaje", methods=["POST"])
 def api_mensaje():
     """Envia un mensaje a todas las hermanas via su buzon."""
@@ -138,7 +160,7 @@ def api_mensaje():
     if not data or "texto" not in data:
         return jsonify({"error": "falta texto"}), 400
 
-    texto = data["texto"].strip()[:500]  # max 500 chars
+    texto = data["texto"].strip()[:500]
     if not texto:
         return jsonify({"error": "texto vacio"}), 400
 
@@ -152,27 +174,49 @@ def api_mensaje():
         except OSError:
             pass
 
-    return jsonify({"ok": True, "enviado_a": enviados, "texto": texto})
+    # Guardar en historial
+    historial = cargar_historial()
+    entrada = {
+        "ts": time.time(),
+        "texto": texto,
+        "enviado_a": enviados,
+        "respuestas": {},
+    }
+    historial.append(entrada)
+    # Mantener ultimas 100 conversaciones
+    historial = historial[-100:]
+    guardar_historial(historial)
+
+    return jsonify({"ok": True, "enviado_a": enviados, "texto": texto,
+                    "msg_index": len(historial) - 1})
 
 
 @app.route("/api/respuestas")
 def api_respuestas():
-    """Lee las respuestas de todas las hermanas."""
-    respuestas = {}
-    for hid, info in HERMANAS.items():
-        resp_path = os.path.join(BASE, info["data"], "respuesta.txt")
-        try:
-            with open(resp_path, "r", encoding="utf-8") as f:
-                texto = f.read().strip()
-            if texto:
-                respuestas[hid] = {
-                    "nombre": info["nombre"],
-                    "color": info["color"],
-                    "texto": texto,
-                }
-        except (FileNotFoundError, OSError):
-            pass
-    return jsonify(respuestas)
+    """Historial completo de conversacion con respuestas actualizadas."""
+    historial = cargar_historial()
+
+    # Leer respuestas actuales de cada hermana y asociarlas al ultimo mensaje
+    if historial:
+        ultimo = historial[-1]
+        for hid, info in HERMANAS.items():
+            resp_path = os.path.join(BASE, info["data"], "respuesta.txt")
+            try:
+                with open(resp_path, "r", encoding="utf-8") as f:
+                    texto = f.read().strip()
+                if texto and hid not in ultimo["respuestas"]:
+                    ultimo["respuestas"][hid] = {
+                        "nombre": info["nombre"],
+                        "color": info["color"],
+                        "texto": texto,
+                        "ts": time.time(),
+                    }
+            except (FileNotFoundError, OSError):
+                pass
+        # Persistir respuestas nuevas
+        guardar_historial(historial)
+
+    return jsonify({"historial": historial})
 
 
 if __name__ == "__main__":

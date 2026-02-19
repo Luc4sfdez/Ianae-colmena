@@ -469,8 +469,38 @@ header h1 {
 
 #chat-respuestas {
     padding: 8px 16px;
-    max-height: 350px;
+    max-height: 400px;
     overflow-y: auto;
+    flex: 1;
+}
+
+.chat-bloque {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #2a2a4a;
+}
+
+.chat-bloque:last-child {
+    border-bottom: none;
+}
+
+.chat-contador {
+    font-size: 0.78em;
+    color: #666;
+    text-align: right;
+    margin-top: 4px;
+}
+
+.chat-vacio {
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+}
+
+.msg-hora-chat {
+    font-size: 0.8em;
+    color: #666;
 }
 
 .chat-respuesta {

@@ -36,7 +36,7 @@ import resumenes
 
 # --- Configuracion ---
 CICLO_SEGUNDOS = 60          # cada cuanto observa (1 minuto)
-REFLEXION_PROB = 0.3          # 30% de probabilidad de reflexionar
+REFLEXION_PROB = 0.1          # 10% - reducido para no saturar Ollama con 8 instancias
 ENVEJECIMIENTO_CADA = 10     # cada 10 ciclos, envejece
 RESUMEN_CADA = 20            # cada 20 ciclos, escribe resumen
 GUARDAR_MEMORIA_CADA = 5     # cada 5 ciclos, guarda recuerdos
@@ -75,7 +75,7 @@ class Ianae:
         # Comprobar Ollama
         self.ollama_ok = ollama_client.disponible()
         if self.ollama_ok:
-            print(f"[{self.mi_id}] Ollama disponible - modelo: {ollama_client.MODELO}")
+            print(f"[{self.mi_id}] Ollama disponible - humano: {ollama_client.MODELO_HUMANO}, interno: {ollama_client.MODELO_INTERNO}")
         else:
             print(f"[{self.mi_id}] Ollama NO disponible - modo basico")
 
@@ -88,25 +88,32 @@ class Ianae:
         """Un ciclo de pensamiento completo."""
         self.ciclos += 1
 
-        # 0. SIEMPRE revisar buzon primero
+        # 0. SIEMPRE revisar buzon primero - PRIORIDAD MAXIMA
         mensaje = sentidos.ver_mensajes()
         if mensaje:
-            print(f"[{self.ciclos}] MENSAJE RECIBIDO: {mensaje[:80]}")
-            # Percibir el mensaje
-            conceptos_msg = self._extraer_conceptos(mensaje, "mensaje")
-            for nombre, es_nuevo in conceptos_msg:
-                if es_nuevo:
-                    diario.escribir("descubrimiento",
-                        f"Alguien me habla! Nuevo: '{nombre}'")
-            diario.escribir("mensaje",
-                f"Me han dicho: {mensaje}")
-            # Guardar como recuerdo episodico
-            self.memoria.recordar("mensaje", mensaje,
-                contexto=f"ciclo {self.ciclos}", emocion="curiosidad")
-            # Generar respuesta
-            self._responder_mensaje(mensaje)
-            # Solo borrar del buzon DESPUES de haber respondido
-            sentidos.confirmar_mensaje()
+            print(f"[{self.ciclos}] MENSAJE HUMANO - PRIORIDAD MAXIMA: {mensaje[:80]}")
+            # Percibir el mensaje (solo la primera vez)
+            if not hasattr(self, '_msg_ya_percibido') or self._msg_ya_percibido != mensaje:
+                conceptos_msg = self._extraer_conceptos(mensaje, "mensaje")
+                for nombre, es_nuevo in conceptos_msg:
+                    if es_nuevo:
+                        diario.escribir("descubrimiento",
+                            f"Alguien me habla! Nuevo: '{nombre}'")
+                diario.escribir("mensaje", f"Me han dicho: {mensaje}")
+                self.memoria.recordar("mensaje", mensaje,
+                    contexto=f"ciclo {self.ciclos}", emocion="curiosidad")
+                self._msg_ya_percibido = mensaje
+            # Generar respuesta - DEDICAR TODO EL CICLO A ESTO
+            respondido = self._responder_mensaje(mensaje)
+            if respondido:
+                # Solo borrar del buzon si respondio correctamente
+                sentidos.confirmar_mensaje()
+                self._msg_ya_percibido = None
+                print(f"[{self.mi_id}] Respondido al humano!")
+            else:
+                print(f"[{self.mi_id}] No pude responder, reintentare proximo ciclo")
+            # SALTAR el resto del ciclo
+            return
 
         # 1. OBSERVAR
         sentido, observacion = sentidos.observar()
@@ -155,8 +162,8 @@ class Ianae:
                     f"Aprendi de mis hermanas: {', '.join(aprendido[:5])}",
                     emocion="alegria")
 
-        # 7. SALA DE ESTAR (ciclos pares = obligatorio participar)
-        if self.ollama_ok and self.ciclos % 2 == 0:
+        # 7. SALA DE ESTAR (cada 4 ciclos para no saturar Ollama)
+        if self.ollama_ok and self.ciclos % 4 == 0:
             sala_msg = self.sala.participar_forzado(diario, self.ciclos)
             if sala_msg:
                 self.memoria.recordar("sala",
@@ -215,7 +222,7 @@ class Ianae:
         return resultados
 
     def _responder_mensaje(self, mensaje):
-        """Ianae responde a un mensaje. Usa Ollama si esta disponible."""
+        """Ianae responde a un mensaje. Devuelve True si uso Ollama, False si fallback."""
         import sentidos as s
 
         # Recoger lo que sabe
@@ -225,22 +232,16 @@ class Ianae:
         # Intentar respuesta con Ollama
         if self.ollama_ok:
             try:
-                # Conocimiento actual
                 nombres_top = [c.nombre for c in top[:5] if len(c.nombre) < 30]
                 conocimiento = (
                     f"Llevo {self.ciclos} ciclos despierta. "
                     f"Conozco {stats['conceptos_vivos']} conceptos con {stats['conexiones']} conexiones. "
                     f"Lo que mas me interesa: {', '.join(nombres_top)}."
                 )
-
-                # RAG - buscar en diarios y resumenes
                 contexto_rag = rag.contexto_para_respuesta(mensaje)
-
-                # Memoria episodica - recuerdos relevantes
                 recuerdos_rel = self.memoria.buscar(mensaje, n=3)
                 texto_recuerdos = self.memoria.formatear(recuerdos_rel)
 
-                # Llamar a Ollama
                 respuesta_llm = ollama_client.responder(
                     mensaje,
                     conocimiento=conocimiento + ("\n" + contexto_rag if contexto_rag else ""),
@@ -253,34 +254,30 @@ class Ianae:
                     self.memoria.recordar("respuesta", respuesta_llm,
                         contexto=f"A mensaje: {mensaje[:60]}", emocion="neutral")
                     print(f"[{self.mi_id}] RESPUESTA (Ollama): {respuesta_llm}")
-                    return
+                    return True
+                else:
+                    print(f"[{self.mi_id}] Ollama ocupado, reintentare proximo ciclo")
+                    return False
             except Exception as e:
                 print(f"[{self.mi_id}] Error Ollama en respuesta: {e}")
+                return False
 
-        # Fallback: respuesta basica sin LLM
-        partes = []
-        partes.append(f"Estoy aqui. Llevo {self.ciclos} ciclos despierta.")
+        # Sin Ollama: respuesta basica
+        partes = [f"Estoy aqui. Llevo {self.ciclos} ciclos despierta."]
         partes.append(f"Conozco {stats['conceptos_vivos']} cosas con {stats['conexiones']} conexiones.")
-
         if top:
             nombres = [c.nombre for c in top[:3] if len(c.nombre) < 30]
             if nombres:
                 partes.append(f"Lo que mas me interesa ahora: {', '.join(nombres)}.")
-
-        # Si el mensaje contiene algo que conoce, mencionarlo
         palabras_msg = set(mensaje.lower().split())
-        reconocidos = []
-        for p in palabras_msg:
-            p = p.strip('.,;:!?¿¡')
-            if p in self.mente.conceptos:
-                reconocidos.append(p)
+        reconocidos = [p.strip('.,;:!?¿¡') for p in palabras_msg if p.strip('.,;:!?¿¡') in self.mente.conceptos]
         if reconocidos:
             partes.append(f"Reconozco: {', '.join(reconocidos)}.")
-
         respuesta = " ".join(partes)
         s.responder(respuesta)
         diario.escribir("respuesta", f"Respondi: {respuesta}")
-        print(f"[{self.mi_id}] RESPUESTA: {respuesta}")
+        print(f"[{self.mi_id}] RESPUESTA (basica): {respuesta}")
+        return True  # sin Ollama no hay reintento
 
     def _reflexionar(self):
         """Ianae reflexiona sobre lo que sabe. Usa Ollama si puede."""
@@ -358,6 +355,11 @@ class Ianae:
     def vivir(self):
         """El bucle principal. Corre hasta que la apaguen."""
         self.despertar()
+        # Escalonar arranque: cada hermana espera un tiempo diferente
+        # para no saturar Ollama todas a la vez
+        delay = hash(self.mi_id) % 45  # 0-45s segun el id
+        print(f"[{self.mi_id}] Esperando {delay}s para escalonar arranque...")
+        time.sleep(delay)
         print(f"[{self.mi_id}] Ciclo cada {CICLO_SEGUNDOS}s. Ctrl+C para parar.\n")
 
         while self.corriendo:

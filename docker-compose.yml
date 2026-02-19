@@ -149,19 +149,23 @@ services:
     container_name: ianae-web
     restart: unless-stopped
     volumes:
-      - ./reuniones:/home/mini/.openclaw/workspace/ianae-v3/reuniones:ro
-      - ./data:/home/mini/.openclaw/workspace/ianae-v3/data:ro
-      - ./data-aria:/home/mini/.openclaw/workspace/ianae-v3/data-aria:ro
-      - ./data-lira:/home/mini/.openclaw/workspace/ianae-v3/data-lira:ro
-      - ./data-nua:/home/mini/.openclaw/workspace/ianae-v3/data-nua:ro
+      - ./web/app.py:/app/app.py:ro
+      - ./web/templates:/app/templates:ro
+      - ./web/static:/app/static:ro
+      - ./reuniones:/home/mini/.openclaw/workspace/ianae-v3/reuniones
+      - ./chat:/home/mini/.openclaw/workspace/ianae-v3/chat
+      - ./data:/home/mini/.openclaw/workspace/ianae-v3/data
+      - ./data-aria:/home/mini/.openclaw/workspace/ianae-v3/data-aria
+      - ./data-lira:/home/mini/.openclaw/workspace/ianae-v3/data-lira
+      - ./data-nua:/home/mini/.openclaw/workspace/ianae-v3/data-nua
+      - ./data-eco:/home/mini/.openclaw/workspace/ianae-v3/data-eco
+      - ./data-runa:/home/mini/.openclaw/workspace/ianae-v3/data-runa
+      - ./data-zoe:/home/mini/.openclaw/workspace/ianae-v3/data-zoe
+      - ./data-sol:/home/mini/.openclaw/workspace/ianae-v3/data-sol
       - ./diario:/home/mini/.openclaw/workspace/ianae-v3/diario:ro
       - ./diario-aria:/home/mini/.openclaw/workspace/ianae-v3/diario-aria:ro
       - ./diario-lira:/home/mini/.openclaw/workspace/ianae-v3/diario-lira:ro
       - ./diario-nua:/home/mini/.openclaw/workspace/ianae-v3/diario-nua:ro
-      - ./data-eco:/home/mini/.openclaw/workspace/ianae-v3/data-eco:ro
-      - ./data-runa:/home/mini/.openclaw/workspace/ianae-v3/data-runa:ro
-      - ./data-zoe:/home/mini/.openclaw/workspace/ianae-v3/data-zoe:ro
-      - ./data-sol:/home/mini/.openclaw/workspace/ianae-v3/data-sol:ro
       - ./diario-eco:/home/mini/.openclaw/workspace/ianae-v3/diario-eco:ro
       - ./diario-runa:/home/mini/.openclaw/workspace/ianae-v3/diario-runa:ro
       - ./diario-zoe:/home/mini/.openclaw/workspace/ianae-v3/diario-zoe:ro

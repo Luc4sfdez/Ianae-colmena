@@ -321,13 +321,62 @@
     const chatSend = document.getElementById('chat-send');
     const chatStatus = document.getElementById('chat-status');
     const chatRespuestas = document.getElementById('chat-respuestas');
-    let esperandoRespuestas = false;
     let pollRespuestasInterval = null;
 
     chatSend.addEventListener('click', enviarMensaje);
     chatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') enviarMensaje();
     });
+
+    function formatHora(ts) {
+        if (!ts) return '';
+        const d = new Date(ts * 1000);
+        return d.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function renderHistorial(historial) {
+        if (!historial || historial.length === 0) {
+            chatRespuestas.innerHTML = '<div class="chat-vacio">Escribe algo para hablar con la colmena...</div>';
+            chatStatus.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        for (const entrada of historial) {
+            // Mensaje del humano
+            html += '<div class="chat-bloque">';
+            html += '<div class="msg-enviado">' +
+                '<span class="msg-hora-chat">' + formatHora(entrada.ts) + '</span> ' +
+                'Tu: ' + escapeHtml(entrada.texto) + '</div>';
+
+            // Respuestas de las hermanas
+            const resps = entrada.respuestas || {};
+            const ids = Object.keys(resps);
+            if (ids.length > 0) {
+                for (const [id, r] of Object.entries(resps)) {
+                    html += '<div class="chat-respuesta" style="border-left-color:' + (r.color || COLORES[id] || '#888') + '">' +
+                        '<span class="chat-nombre" style="color:' + (r.color || COLORES[id] || '#888') + '">' + (r.nombre || id) + '</span>' +
+                        '<span class="chat-texto">' + escapeHtml(r.texto) + '</span>' +
+                        '</div>';
+                }
+                html += '<div class="chat-contador">' + ids.length + ' de 8 respondieron</div>';
+            } else {
+                html += '<div class="chat-contador esperando">Esperando respuestas...</div>';
+            }
+            html += '</div>';
+        }
+        chatRespuestas.innerHTML = html;
+        chatRespuestas.scrollTop = chatRespuestas.scrollHeight;
+
+        // Status del ultimo mensaje
+        const ultimo = historial[historial.length - 1];
+        const nResps = Object.keys(ultimo.respuestas || {}).length;
+        if (nResps < 8) {
+            chatStatus.innerHTML = '<span class="esperando">Esperando... ' + nResps + ' de 8 han respondido</span>';
+        } else {
+            chatStatus.innerHTML = '';
+        }
+    }
 
     async function enviarMensaje() {
         const texto = chatInput.value.trim();
@@ -336,7 +385,6 @@
         chatInput.value = '';
         chatSend.disabled = true;
         chatStatus.innerHTML = '<span class="enviando">Enviando a las 8 mentes...</span>';
-        chatRespuestas.innerHTML = '';
 
         try {
             const r = await fetch('/api/mensaje', {
@@ -346,14 +394,11 @@
             });
             const data = await r.json();
             if (data.ok) {
-                chatStatus.innerHTML =
-                    '<div class="msg-enviado">Tu: ' + escapeHtml(texto) + '</div>' +
-                    '<span class="esperando">Esperando respuestas... (cada hermana responde en su proximo ciclo)</span>';
-                esperandoRespuestas = true;
+                // Recargar historial completo
+                await cargarHistorial();
                 // Pollear respuestas cada 3s
                 if (pollRespuestasInterval) clearInterval(pollRespuestasInterval);
-                pollRespuestasInterval = setInterval(cargarRespuestas, 3000);
-                setTimeout(() => cargarRespuestas(), 1000);
+                pollRespuestasInterval = setInterval(cargarHistorial, 3000);
             }
         } catch(e) {
             chatStatus.innerHTML = '<span class="error">Error al enviar</span>';
@@ -361,33 +406,27 @@
         chatSend.disabled = false;
     }
 
-    async function cargarRespuestas() {
+    async function cargarHistorial() {
         const data = await fetchJSON('/api/respuestas');
         if (!data) return;
+        const historial = data.historial || [];
+        renderHistorial(historial);
 
-        const ids = Object.keys(data);
-        if (ids.length === 0) return;
-
-        let html = '';
-        for (const [id, r] of Object.entries(data)) {
-            html += '<div class="chat-respuesta" style="border-left-color:' + r.color + '">' +
-                '<span class="chat-nombre" style="color:' + r.color + '">' + r.nombre + '</span>' +
-                '<span class="chat-texto">' + escapeHtml(r.texto) + '</span>' +
-                '</div>';
-        }
-        chatRespuestas.innerHTML = html;
-
-        // Si ya respondieron varias, parar polling
-        if (ids.length >= 4) {
-            clearInterval(pollRespuestasInterval);
-            const statusEl = document.querySelector('.esperando');
-            if (statusEl) statusEl.textContent = ids.length + ' de 8 han respondido';
+        // Si el ultimo mensaje ya tiene 8 respuestas, parar polling activo
+        if (historial.length > 0) {
+            const ultimo = historial[historial.length - 1];
+            const nResps = Object.keys(ultimo.respuestas || {}).length;
+            if (nResps >= 4 && pollRespuestasInterval) {
+                clearInterval(pollRespuestasInterval);
+                pollRespuestasInterval = null;
+            }
         }
     }
 
     poll();
     setInterval(poll, 3000);
     cargarIndividual(hermanaSeleccionada);
+    cargarHistorial();
     </script>
 </body>
 </html>

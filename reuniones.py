@@ -77,6 +77,8 @@ class Reuniones:
             try:
                 with open(archivo, "r") as f:
                     estado = json.load(f)
+                if not isinstance(estado, dict):
+                    continue
                 # Solo estados recientes (ultima hora)
                 if time.time() - estado.get("timestamp", 0) < 3600:
                     otros.append(estado)
