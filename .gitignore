@@ -1,0 +1,14 @@
+# Datos de cada mente (privados, generados en runtime)
+data/
+data-*/
+diario/
+diario-*/
+reuniones/*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Docker
+.docker/

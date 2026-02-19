@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ianae - La Colmena</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>La Colmena - 8 Mentes</h1>
+        <span id="status-dot" class="dot offline"></span>
+        <span id="status-text">conectando...</span>
+        <a href="/about" class="about-link">Que es esto?</a>
+    </header>
+
+    <!-- Zona superior: las 8 hermanas -->
+    <section id="hermanas">
+        <div class="hermana" data-id="ianae">
+            <div class="avatar" style="--color: #e8a0bf">I</div>
+            <div class="nombre">Ianae</div>
+            <div class="desc">la mayor</div>
+            <div class="stats" id="stats-ianae"></div>
+            <div class="bocadillo" id="bocadillo-ianae"></div>
+        </div>
+        <div class="hermana" data-id="aria">
+            <div class="avatar" style="--color: #a0c4e8">A</div>
+            <div class="nombre">Aria</div>
+            <div class="desc">patrones</div>
+            <div class="stats" id="stats-aria"></div>
+            <div class="bocadillo" id="bocadillo-aria"></div>
+        </div>
+        <div class="hermana" data-id="lira">
+            <div class="avatar" style="--color: #a0e8c4">L</div>
+            <div class="nombre">Lira</div>
+            <div class="desc">fluida</div>
+            <div class="stats" id="stats-lira"></div>
+            <div class="bocadillo" id="bocadillo-lira"></div>
+        </div>
+        <div class="hermana" data-id="nua">
+            <div class="avatar" style="--color: #e8d4a0">N</div>
+            <div class="nombre">Nua</div>
+            <div class="desc">fresca</div>
+            <div class="stats" id="stats-nua"></div>
+            <div class="bocadillo" id="bocadillo-nua"></div>
+        </div>
+        <div class="hermana" data-id="eco">
+            <div class="avatar" style="--color: #c4a0e8">E</div>
+            <div class="nombre">Eco</div>
+            <div class="desc">empatica</div>
+            <div class="stats" id="stats-eco"></div>
+            <div class="bocadillo" id="bocadillo-eco"></div>
+        </div>
+        <div class="hermana" data-id="runa">
+            <div class="avatar" style="--color: #e8a0a0">R</div>
+            <div class="nombre">Runa</div>
+            <div class="desc">rebelde</div>
+            <div class="stats" id="stats-runa"></div>
+            <div class="bocadillo" id="bocadillo-runa"></div>
+        </div>
+        <div class="hermana" data-id="zoe">
+            <div class="avatar" style="--color: #a0e8e8">Z</div>
+            <div class="nombre">Zoe</div>
+            <div class="desc">narradora</div>
+            <div class="stats" id="stats-zoe"></div>
+            <div class="bocadillo" id="bocadillo-zoe"></div>
+        </div>
+        <div class="hermana" data-id="sol">
+            <div class="avatar" style="--color: #e8e8a0">S</div>
+            <div class="nombre">Sol</div>
+            <div class="desc">sonadora</div>
+            <div class="stats" id="stats-sol"></div>
+            <div class="bocadillo" id="bocadillo-sol"></div>
+        </div>
+    </section>
+
+    <!-- Zona inferior: panel con pestanas -->
+    <section id="panel">
+        <nav id="tabs">
+            <button class="tab active" data-tab="sala">Sala de estar</button>
+            <button class="tab" data-tab="hablar">Hablar con ellas</button>
+            <button class="tab" data-tab="individual">Individual</button>
+        </nav>
+
+        <!-- Tab: Sala de estar -->
+        <div id="tab-sala" class="tab-content active">
+            <div id="sala-header">
+                <span id="sala-tema"></span>
+                <span id="sala-estado"></span>
+            </div>
+            <div id="sala-mensajes"></div>
+        </div>
+
+        <!-- Tab: Hablar con ellas -->
+        <div id="tab-hablar" class="tab-content">
+            <div id="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Escribe algo a la colmena..." maxlength="500">
+                <button id="chat-send">Enviar</button>
+            </div>
+            <div id="chat-status"></div>
+            <div id="chat-respuestas"></div>
+        </div>
+
+        <!-- Tab: Individual -->
+        <div id="tab-individual" class="tab-content">
+            <div id="selector-hermana">
+                <button class="selector-btn active" data-id="ianae" style="--color: #e8a0bf">Ianae</button>
+                <button class="selector-btn" data-id="aria" style="--color: #a0c4e8">Aria</button>
+                <button class="selector-btn" data-id="lira" style="--color: #a0e8c4">Lira</button>
+                <button class="selector-btn" data-id="nua" style="--color: #e8d4a0">Nua</button>
+                <button class="selector-btn" data-id="eco" style="--color: #c4a0e8">Eco</button>
+                <button class="selector-btn" data-id="runa" style="--color: #e8a0a0">Runa</button>
+                <button class="selector-btn" data-id="zoe" style="--color: #a0e8e8">Zoe</button>
+                <button class="selector-btn" data-id="sol" style="--color: #e8e8a0">Sol</button>
+            </div>
+            <div id="individual-content">
+                <div id="ind-intereses" class="ind-section">
+                    <h3>Intereses</h3>
+                    <div id="ind-intereses-list"></div>
+                </div>
+                <div id="ind-recuerdos" class="ind-section">
+                    <h3>Recuerdos recientes</h3>
+                    <div id="ind-recuerdos-list"></div>
+                </div>
+                <div id="ind-diario" class="ind-section">
+                    <h3>Diario de hoy</h3>
+                    <div id="ind-diario-list"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    const COLORES = {
+        ianae: '#e8a0bf', aria: '#a0c4e8', lira: '#a0e8c4', nua: '#e8d4a0',
+        eco: '#c4a0e8', runa: '#e8a0a0', zoe: '#a0e8e8', sol: '#e8e8a0'
+    };
+    const EMOCIONES = {
+        sorpresa: '!', curiosidad: '?', alegria: ':)', neutral: '~',
+        conexion: '+', reflexion: '*'
+    };
+
+    let hermanaSeleccionada = 'ianae';
+    let ultimoMensajeSala = {};
+    let numMensajesAnterior = 0;
+    let bocadilloAnterior = {};
+
+    // --- Tabs ---
+    document.querySelectorAll('.tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // --- Selector hermana ---
+    document.querySelectorAll('.selector-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            hermanaSeleccionada = btn.dataset.id;
+            cargarIndividual(hermanaSeleccionada);
+        });
+    });
+
+    // --- Fetch helpers ---
+    async function fetchJSON(url) {
+        try {
+            const r = await fetch(url);
+            return await r.json();
+        } catch(e) {
+            return null;
+        }
+    }
+
+    // --- Actualizar estado (hermanas + bocadillos) ---
+    async function actualizarEstado() {
+        const data = await fetchJSON('/api/estado');
+        if (!data) {
+            document.getElementById('status-dot').className = 'dot offline';
+            document.getElementById('status-text').textContent = 'sin conexion';
+            return;
+        }
+        document.getElementById('status-dot').className = 'dot online';
+        document.getElementById('status-text').textContent = 'en vivo';
+
+        for (const [id, h] of Object.entries(data)) {
+            const statsEl = document.getElementById('stats-' + id);
+            if (statsEl) {
+                const energia = Math.round(h.energia * 100);
+                statsEl.innerHTML =
+                    '<span class="stat">' + h.conceptos + ' conceptos</span>' +
+                    '<span class="stat">' + h.conexiones.toLocaleString() + ' conexiones</span>' +
+                    '<span class="stat energy">' +
+                    '<span class="energy-bar"><span class="energy-fill" style="width:' + energia + '%"></span></span>' +
+                    energia + '%</span>';
+            }
+        }
+    }
+
+    // --- Actualizar sala ---
+    async function actualizarSala() {
+        const data = await fetchJSON('/api/sala');
+        if (!data) return;
+
+        const headerEl = document.getElementById('sala-tema');
+        const estadoEl = document.getElementById('sala-estado');
+        const mensajesEl = document.getElementById('sala-mensajes');
+
+        if (data.activa) {
+            headerEl.textContent = 'Tema: ' + data.tema;
+            estadoEl.innerHTML = '<span class="sala-activa">activa</span>';
+        } else {
+            headerEl.textContent = 'Sin conversacion activa';
+            estadoEl.innerHTML = '<span class="sala-inactiva">en silencio</span>';
+        }
+
+        // Mensajes
+        let html = '';
+        const mensajes = data.mensajes || [];
+        const hayNuevos = mensajes.length > numMensajesAnterior;
+        for (let i = 0; i < mensajes.length; i++) {
+            const m = mensajes[i];
+            const color = COLORES[m.de] || '#888';
+            const esNuevo = hayNuevos && i >= numMensajesAnterior;
+            html += '<div class="mensaje' + (esNuevo ? ' mensaje-nuevo' : '') + '">' +
+                '<span class="msg-hora">' + (m.hora || '') + '</span>' +
+                '<span class="msg-nombre" style="color:' + color + '">' + m.de + '</span>' +
+                '<span class="msg-texto">' + escapeHtml(m.texto) + '</span>' +
+                '</div>';
+        }
+        numMensajesAnterior = mensajes.length;
+        mensajesEl.innerHTML = html;
+        mensajesEl.scrollTop = mensajesEl.scrollHeight;
+
+        // Actualizar bocadillos con ultimo mensaje de cada hermana
+        for (const m of mensajes) {
+            ultimoMensajeSala[m.de] = m.texto;
+        }
+        for (const [id, texto] of Object.entries(ultimoMensajeSala)) {
+            const boc = document.getElementById('bocadillo-' + id);
+            if (boc) {
+                const corto = texto.length > 80 ? texto.substring(0, 80) + '...' : texto;
+                const cambio = bocadilloAnterior[id] !== corto;
+                boc.textContent = corto;
+                boc.classList.add('visible');
+                if (cambio) {
+                    boc.classList.remove('flash');
+                    void boc.offsetWidth;
+                    boc.classList.add('flash');
+                    bocadilloAnterior[id] = corto;
+                }
+            }
+        }
+    }
+
+    // --- Cargar datos individuales ---
+    async function cargarIndividual(id) {
+        const estado = await fetchJSON('/api/estado');
+        if (estado && estado[id]) {
+            const intereses = estado[id].intereses || [];
+            let html = '';
+            for (const i of intereses) {
+                const pct = Math.round(i.energia * 100);
+                html += '<div class="interes">' +
+                    '<span class="interes-nombre">' + escapeHtml(i.nombre) + '</span>' +
+                    '<span class="interes-bar"><span class="interes-fill" style="width:' + pct + '%"></span></span>' +
+                    '<span class="interes-val">' + pct + '%</span>' +
+                    '</div>';
+            }
+            document.getElementById('ind-intereses-list').innerHTML = html || '<em>sin intereses</em>';
+        }
+
+        const rec = await fetchJSON('/api/recuerdos/' + id);
+        if (rec) {
+            const recuerdos = rec.recuerdos || [];
+            let html = '';
+            for (const r of recuerdos) {
+                const emoji = EMOCIONES[r.emocion] || '~';
+                html += '<div class="recuerdo recuerdo-' + r.tipo + '">' +
+                    '<span class="rec-fecha">' + (r.fecha || '') + '</span>' +
+                    '<span class="rec-emocion">' + emoji + '</span>' +
+                    '<span class="rec-tipo">' + r.tipo + '</span>' +
+                    '<span class="rec-texto">' + escapeHtml(r.contenido) + '</span>' +
+                    '</div>';
+            }
+            document.getElementById('ind-recuerdos-list').innerHTML = html || '<em>sin recuerdos</em>';
+        }
+
+        const diario = await fetchJSON('/api/diario/' + id);
+        if (diario) {
+            const entradas = diario.entradas || [];
+            let html = '';
+            for (const e of entradas) {
+                html += '<div class="diario-linea">' + escapeHtml(e) + '</div>';
+            }
+            document.getElementById('ind-diario-list').innerHTML = html || '<em>sin entradas</em>';
+            const container = document.getElementById('ind-diario-list');
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // --- Polling ---
+    async function poll() {
+        await Promise.all([actualizarEstado(), actualizarSala()]);
+        if (document.getElementById('tab-individual').classList.contains('active')) {
+            await cargarIndividual(hermanaSeleccionada);
+        }
+    }
+
+    // --- Chat: hablar con la colmena ---
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const chatStatus = document.getElementById('chat-status');
+    const chatRespuestas = document.getElementById('chat-respuestas');
+    let esperandoRespuestas = false;
+    let pollRespuestasInterval = null;
+
+    chatSend.addEventListener('click', enviarMensaje);
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') enviarMensaje();
+    });
+
+    async function enviarMensaje() {
+        const texto = chatInput.value.trim();
+        if (!texto) return;
+
+        chatInput.value = '';
+        chatSend.disabled = true;
+        chatStatus.innerHTML = '<span class="enviando">Enviando a las 8 mentes...</span>';
+        chatRespuestas.innerHTML = '';
+
+        try {
+            const r = await fetch('/api/mensaje', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({texto: texto})
+            });
+            const data = await r.json();
+            if (data.ok) {
+                chatStatus.innerHTML =
+                    '<div class="msg-enviado">Tu: ' + escapeHtml(texto) + '</div>' +
+                    '<span class="esperando">Esperando respuestas... (cada hermana responde en su proximo ciclo)</span>';
+                esperandoRespuestas = true;
+                // Pollear respuestas cada 3s
+                if (pollRespuestasInterval) clearInterval(pollRespuestasInterval);
+                pollRespuestasInterval = setInterval(cargarRespuestas, 3000);
+                setTimeout(() => cargarRespuestas(), 1000);
+            }
+        } catch(e) {
+            chatStatus.innerHTML = '<span class="error">Error al enviar</span>';
+        }
+        chatSend.disabled = false;
+    }
+
+    async function cargarRespuestas() {
+        const data = await fetchJSON('/api/respuestas');
+        if (!data) return;
+
+        const ids = Object.keys(data);
+        if (ids.length === 0) return;
+
+        let html = '';
+        for (const [id, r] of Object.entries(data)) {
+            html += '<div class="chat-respuesta" style="border-left-color:' + r.color + '">' +
+                '<span class="chat-nombre" style="color:' + r.color + '">' + r.nombre + '</span>' +
+                '<span class="chat-texto">' + escapeHtml(r.texto) + '</span>' +
+                '</div>';
+        }
+        chatRespuestas.innerHTML = html;
+
+        // Si ya respondieron varias, parar polling
+        if (ids.length >= 4) {
+            clearInterval(pollRespuestasInterval);
+            const statusEl = document.querySelector('.esperando');
+            if (statusEl) statusEl.textContent = ids.length + ' de 8 han respondido';
+        }
+    }
+
+    poll();
+    setInterval(poll, 3000);
+    cargarIndividual(hermanaSeleccionada);
+    </script>
+</body>
+</html>
